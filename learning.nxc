@@ -1,0 +1,534 @@
+/**-----------------------------------------------------------------------------
+ * 	Title:      SARSA algorithm for LEGO MINDSTORMS NXT robot					
+ * 	Project:    Cognitive Robotics. Mechatronics Engineering 2014-2015 
+    			University of Málaga  
+ *	@author:    Angel Martinez-Tenor                                                     
+ *  Language:   NXC
+ *	@version	1.5 (April 16, 2015)  
+------------------------------------------------------------------------------*/
+
+
+/* References ----------------------------------------------------------------*/
+    #include "NXT_io.h"
+    #include "TASK.h"
+
+/* Constants definition ------------------------------------------------------*/
+
+    #define ALGORITHM_NAME       	"SARSA" 
+
+/* Global variables ----------------------------------------------------------*/
+
+    // Main arrays will be defined here to avoid exceeding NXC limitations	
+    byte        Policy[N_STATES+1];         			// Current Policy
+    float       V[N_STATES+1];              			// Value function
+    float       Q[N_STATES+1][N_ACTIONS+1];				// Q-matrix
+    int         exploration[N_STATES+1][N_ACTIONS+1];	// Exploration matix	
+    long        step;                       			// Current step
+
+	int  		frequentist_data[N_STATES+1][N_ACTIONS+1][N_STATES+1];
+    	/* Holds the number of steps in which from s, executing a, resulted sp.
+			 For analysis purposes only */
+
+    // Display variables     
+    string  policyString;    
+    string  msg;			
+	
+	byte mode;  // 0: Normal learning, 1: Debug learning, 2: Exploit Policy, 3: Learning finished
+
+/* Functions prototypes ------------------------------------------------------*/
+    /* Note: Older Bricx Command Center versions will throw error here. 	
+     *      In that case, erasing this section will solve the problem.
+     *      NBC 1.2.1.r4 compiler under Linux works OK in any case.     
+ 	 */
+
+    long getMemoryNeeded(byte nstates, byte nactions, long nsteps);
+    void NXTsaveData(long memoryNeeded);    	
+    byte selectAction(byte s, byte strategy); 
+    void exploitPolicy(byte s);    
+
+
+
+/* Functions definitions------------------------------------------------------*/
+
+long getMemoryNeeded(byte nstates, byte nactions, long nsteps) { 
+	/* Obtain and returns the memory needed for the data file in the NXT robot
+ 	 * INPUT: number of states, number of actions, number of steps 
+	 * OUTPUT: NXT memory needed in bytes 
+	 */
+
+    long  memoryNeeded;
+
+    memoryNeeded = 100; 								// String comments: %...
+    memoryNeeded += (nstates+1)*(5+1)+2;  				// Policy row
+    memoryNeeded += (nstates+1)*(10+1)+2; 				// Value function row
+    memoryNeeded += ((nstates+1)*(10+1)+2)*(nactions+1);// Q matrix rows
+    memoryNeeded += ((nstates+1)*(5+1)+2)*(nactions+1); // Q explor. rows
+	memoryNeeded += ((nstates+1)*(5+1)+2)*(nactions+1)*(nstates+1);	
+											    // sample model data matrix				
+    
+    return memoryNeeded;
+}
+
+
+//------------------------------------------------------------------------------
+void NXTsaveData(long memoryNeeded) {
+	/* Saves name, steps, Policy, V, Q, exploration matrix, sample model
+	 * INPUT: Memory needed for saving the data in bytes 
+	 */
+
+    byte            handle, res;
+    unsigned long   memoryUsed, size;
+    string          smu, sti, lin;
+    byte            s, a, sp;
+    string          val;
+    string          filename;
+    
+    filename = StrCat(NAME,".log");
+	
+    res=CreateFile(filename,memoryNeeded,handle);
+    if (res != LDR_SUCCESS) {    
+        display("Error creating file!");
+		playErrorSound();
+        Stop(true);
+    }
+    
+	memoryUsed = 0;
+
+    // 0- Save parameters
+
+    lin = StrCat("% ",NAME);			
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+    lin = StrCat("% Learning Algorithm: ",ALGORITHM_NAME);
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+    lin = StrCat("% ",ENVIRONMENT);		
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+    lin = "\n % --------------- INPUT PARAMETERS ---------- \n ";  		
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;	
+	
+    val = NumToStr(N_STATES);			
+    lin = StrCat("N_STATES = ",val,";");
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+    val = NumToStr(N_ACTIONS);				
+    lin = StrCat("N_ACTIONS = ",val,";");
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+    val = NumToStr(GAMMA);				
+    lin = StrCat("GAMMA = ",val,";");
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+    val = NumToStr(INITIAL_ALPHA);		
+    lin = StrCat("INITIAL_ALPHA = ",val,";");
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+    val = NumToStr(STEP_TIME);				
+    lin = StrCat("STEP_TIME = ",val,";");
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+    val = NumToStr(INITIAL_POLICY);			
+    lin = StrCat("INITIAL_POLICY = ",val,";");
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+	lin = "% -------Physical ---- ";  		
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;	
+	
+    val = NumToStr(MOTOR_POWER);			
+    lin = StrCat("MOTOR_POWER = ",val,";");
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+    val = NumToStr(THRESHOLD_DISTANCE);
+    lin = StrCat("THRESHOLD_DISTANCE = ",val,";");
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+    val = NumToStr(THRESHOLD_DEGREES );
+    lin = StrCat("THRESHOLD_DEGREES  = ",val,";");
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+    lin = "\n % ------------------- RESULTS ---------------- \n ";  		
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;	
+    val = NumToStr(step);			
+    lin = StrCat("steps = ",val,";");
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;
+
+     // 1 - Save policy
+    lin ="Policy = [";
+    for (s = 1; s < N_STATES+1; s++) {       
+        val = NumToStr(Policy[s]);
+        lin += StrCat(val," ");        
+    }  
+    lin += "]; % [s]";          
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size; 
+
+    // 2 - Save Value function
+    lin ="V = [";
+    for (s = 1; s < N_STATES+1; s++) {       
+        val = NumToStr(V[s]);
+        lin += StrCat(val," ");        
+    }
+    lin += "]; % [s]";                      
+    WriteLnString(handle,lin,size);    
+    memoryUsed += size;       
+
+    // 3 - Save Q-matrix
+    lin ="Q = [";
+    WriteLnString(handle,lin,size);
+    memoryUsed += size;
+    for (s = 1; s < N_STATES+1; s++) {
+        lin ="";
+        for (a = 1; a < N_ACTIONS+1; a++) {		
+            val = NumToStr(Q[s][a]);
+            lin += StrCat(val," ");
+        }
+        WriteLnString(handle,lin,size);
+        memoryUsed += size;
+    }
+    lin = "]; % [s,a]"; 
+    WriteLnString(handle,lin,size);
+    memoryUsed += size;  
+
+	    lin = "\n % ------------------- EXTRA ---------------- \n ";  		
+
+    // 4 - Save exploration matrix
+    lin ="exploration = [";
+    WriteLnString(handle,lin,size);
+    memoryUsed += size;
+    for (s = 1; s < N_STATES+1; s++) {
+        lin ="";
+        for (a = 1; a < N_ACTIONS+1; a++) {		
+            val = NumToStr(exploration[s][a]);
+            lin += StrCat(val," ");
+        }
+        WriteLnString(handle,lin,size);
+        memoryUsed += size;
+    }
+    lin = "]; % [s,a]"; 
+    WriteLnString(handle,lin,size);
+    memoryUsed += size;  
+
+
+    // 5 - Save sample model matrix
+	for (a = 1; a < N_ACTIONS+1; a++) {
+		lin =StrCat("frequentist_data(:,",NumToStr(a),",:) = [");
+		WriteLnString(handle,lin,size);
+		memoryUsed += size;
+		for (s = 1; s < N_STATES+1; s++) {
+			lin ="";
+			for (sp = 1; sp < N_STATES+1; sp++) {
+				val = NumToStr(frequentist_data[s][a][sp]);
+				lin += StrCat(val," ");
+			}
+			WriteLnString(handle,lin,size);
+			memoryUsed += size;
+		}
+		lin = "]; % [s,a,sp]";
+		WriteLnString(handle,lin,size);
+        memoryUsed += size;
+	}
+
+    CloseFile(handle);
+    //lin=StrCat("bytes:",NumToStr(memoryUsed));
+    //display(lin);
+	Wait(1000);    
+}
+
+
+
+// -----------------------------------------------------------------------------
+void exploitPolicy(byte s) {
+/*	For analysis purposes only. If ENTER BUTTON of NXT brick is pressed, 
+ *	the learning process breaks into an exploitation loop. In this state the 
+ *	learning process remains invariable until the left button is pressed again
+ */
+    int a;
+    int sp;
+    while(getButtonPressed() == 0) {
+		playExploitationSound();
+        a = Policy[s]; // Exploitation
+        executeAction(a);
+        Wait(STEP_TIME); 
+        sp = observeState();
+        s = sp; // update state
+	}
+    executeNXT("stop");
+
+}
+
+
+// -----------------------------------------------------------------------------
+byte selectAction(byte s, byte strategy) {
+/*	Obtains the action to be executed based on the strategy selected and the 
+	current state.
+	INPUT	s: 			state (from 1 to N_STATES)
+    		strategy:  	0: Exploitation (most valued action)
+						1: Random action
+						2: Least Explored action   */
+
+    byte action_selected = 1;
+    byte i; 
+
+	switch(strategy) {
+
+		case 0:{ // Exploitation
+	        action_selected = Policy[s];	
+			break;
+		}
+
+		case 1:{ // Random Exploration
+			action_selected = Random(N_ACTIONS)+1;
+			break;
+		}
+
+		case 2:{ // Least Explored Action
+			action_selected = 1;               
+            for(i=2; i<N_ACTIONS+1; i++) {
+                if (exploration[s][i] < exploration[s][action_selected])
+                    /* exploration[state][action] is the exploration matrix
+                       used to count the number of times that the cell Q[s][a]
+					   has been explored */
+                    action_selected = i;
+            }
+		break;
+		}
+	}   
+	
+	//     DEBUGGING: ERROR AT SELECTING AN ACTION
+	if(action_selected < 1 || action_selected > N_ACTIONS) {
+		displayForceRow("Error, Action: ",0);
+		displayForceRow(NumToStr(strategy),1);
+     Wait(5000);
+	}
+	
+	
+	return(action_selected);
+}
+
+
+
+
+// -----------------------------------Main function ----------------------------
+task main() {	
+    
+	/* Local variables */
+    byte s,a,sp,ap;		// s, a, s', a'
+    float R;         	// Obtained Reward  
+    float alpha;     	// Learning rate    	
+    long memoryNeeded;
+    byte i,j,k;
+    byte strategy;				// 0: exploit, 1: random, 2: Least explored
+    string filename;
+	byte button_pressed;
+    bool exit;
+      
+    exit = false;
+
+	mode = 0; // normal learning
+	
+    filename = StrCat(NAME,".log");
+    DeleteFile(filename);
+    memoryNeeded = getMemoryNeeded(N_STATES, N_ACTIONS, N_STEPS);
+    Stop(!NXTcheckMemory(memoryNeeded));
+
+  	playStartSound();
+
+    ResetRotationCount(LEFT_WHEEL);    
+    ResetRotationCount(RIGHT_WHEEL);
+    NXT_mapSensors();
+
+    msg=StrCat(NAME," started ");
+    display(msg);
+	Wait(500);
+
+    /* Initial State */
+    for(i=1; i<N_STATES+1; i++) {		// Q[0][x] & Q[x][0] unused           
+        V[i]=0;
+        Policy[i] = INITIAL_POLICY;
+        for(j=1; j<N_ACTIONS+1; j++) {
+            exploration[i][j]=0;
+            Q[i][j]=0;
+			for(k=1; k<N_STATES+1; k++) {
+	           	frequentist_data[i][j][k]=0;
+			}        
+		}
+    }
+    alpha = INITIAL_ALPHA;
+    s = observeState();
+	strategy = 1;
+	a = 1;
+	ap = 1;
+
+	
+	// SARSA algorithm Main loop -----------------------------------------------
+    for(step=1; step<N_STEPS+1; step++) {
+
+        executeAction(a);
+        Wait(STEP_TIME); 
+        sp = observeState();
+
+        R = obtainReward(s,a,sp); 
+        if (exploration[s][a] < INT_MAX)
+            exploration[s][a]++; 
+
+        if (frequentist_data[s][a][sp] < INT_MAX)
+            frequentist_data[s][a][sp]++;
+
+        strategy = selectActionStrategy();  
+        ap = selectAction(sp, strategy); 		 
+
+         // Update Q-matrix 														
+        Q[s][a]=(1-alpha)*Q[s][a]  +  alpha*(R+ GAMMA*Q[sp][ap]);               // SARSA algorithm
+
+        // Update V and Policy 													
+        V[s] = Q[s][1];
+        Policy[s] = 1;        
+        for(i=2; i<N_ACTIONS+1; i++) {
+            if(Q[s][i] > V[s]) {
+                V[s] = Q[s][i];
+                Policy[s] = i;		        
+            }
+        }
+
+
+        // Display information
+        ClearScreen();
+        displayForceRow(NAME,0);
+        msg= StrCat("step:   ",NumToStr(step));
+        displayForceRow(msg,1);
+		    msg= StrCat("s:      ",NumToStr(s));
+		         displayForceRow(msg,2);
+		    msg= StrCat("a:      ",NumToStr(a));
+		         displayForceRow(msg,3);
+	     	msg= StrCat("sp:     ",NumToStr(sp));
+	     	     displayForceRow(msg,4);
+	     	msg= StrCat("Reward: ",NumToStr(R));
+	     	     displayForceRow(msg,5);
+
+        msg="policy:";
+        displayForceRow(msg,7);
+        policyString = "";
+        msg="";
+        for(i=1; i<N_STATES+1; i++) {
+            msg += StrCat(NumToStr(Policy[i])," ");
+            policyString += StrCat(NumToStr(Policy[i])," ");
+        }
+        displayForceRow(msg,8);
+		
+		// Update state  
+        s = sp; 
+		a = ap;
+		
+		playStepSound();
+
+
+        // User events
+		button_pressed = getButtonPressed();
+				
+		switch(mode) {
+		
+			case 0:     // normal learning
+				mode = button_pressed;  // left:        debug(1)
+				                        // enter:       exploit(2)
+				                        // right:       finish(3) 
+										// no_button:   normal(0)
+				break;
+		
+			case 1:     // debug: 3s delay(stopped) after each learning step 
+						// until a button is pressed	
+				executeNXT("stop");
+				displayForceRow("-- DEBUG MODE --",0);
+				Wait(100);
+				playDebugSound();
+				Wait(3000);
+				if (button_pressed != 0) {
+          			executeNXT("stop");
+					ClearScreen();
+					displayForceRow("-- NORMAL MODE --",0);
+					mode = 0;		
+					Wait(100);
+					playStartSound();
+          			Wait(2000);
+				}
+					
+				break;
+		
+			case 2:     // exploit policy
+				executeNXT("stop");
+				ClearScreen();
+				displayForceRow("- EXPLOIT MODE -",0);
+				Wait(100);
+        		playPauseSound();
+				Wait(2000);
+
+				exploitPolicy(s); // exploiting loop until a button is pressed
+				
+				ClearScreen();
+				mode = 0;		
+				displayForceRow("- NORMAL MODE -",0);
+				Wait(100);
+				playStartSound();
+				Wait(2000);
+				break;
+		
+			case 3:     // Learning finished	
+				exit=true;
+				break;		
+		}
+		
+		if (exit==true)
+			break;
+
+    }  // ---------------------  Main loop ending --------------------------
+
+
+    executeNXT("stop");
+    ClearScreen();
+	  displayForceRow("--- FINISHED ---",0);
+    Wait(100);
+		playEndingSound();
+		Wait(1000);
+    NXTsaveData(memoryNeeded);
+
+    while(true) {
+		playPauseSound();
+		displayForceRow("Enter: Exploit",1);
+		displayForceRow("Arrows: Exit",2);
+        Wait(300);
+        if (exploitPolicyButton()) {
+				displayForceRow("- EXPLOIT MODE -",0);
+				Wait(100);
+				playPauseSound();
+				Wait(2000);
+        		exploitPolicy(s);
+				Wait(100);
+        		playPauseSound();
+				Wait(2000);
+            
+        }
+        else if (getButtonPressed() != 0) {
+			display("--- Thanks!! ---");
+			Wait(100);
+            playEndingSound();
+			Wait(2000);
+			break;
+        }
+    }
+}
