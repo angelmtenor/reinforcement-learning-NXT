@@ -395,8 +395,8 @@ task main() {
         ap = selectAction(sp, strategy); 		 
 
          // Update Q-matrix 														
-        Q[s][a]=(1-alpha)*Q[s][a]  +  alpha*(R+ GAMMA*Q[sp][ap]);               // SARSA        update
-        // Q[s][a]=(1-alpha)*Q[s][a]  +  alpha*(R+ GAMMA*V[sp]);                // Q-learning   update
+        Q[s][a]=(1-alpha)*Q[s][a]  +  alpha*(R+ GAMMA*Q[sp][ap]);               // SARSA update
+        // Q[s][a]=(1-alpha)*Q[s][a]  +  alpha*(R+ GAMMA*V[sp]);                // Q-learning update
 
         // Update V and Policy 													
         V[s] = Q[s][1];
