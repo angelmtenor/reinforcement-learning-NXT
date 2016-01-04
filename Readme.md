@@ -1,5 +1,4 @@
-# reinforcement-learning-NXT
-Reinforcement Learning in the Lego Mindstorms NXT Robot
+# Reinforcement Learning in the Lego Mindstorms NXT Robot
 
 Practical Activity – Cognitive Robotics 
 
