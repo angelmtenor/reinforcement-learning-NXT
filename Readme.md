@@ -1,7 +1,5 @@
 # Reinforcement Learning in the Lego Mindstorms NXT Robot
 
-https://zenodo.org/badge/doi/10.5281/zenodo.44752.svg
-
 Practical Activity – Cognitive Robotics 
 
 Master Degree in Mechatronics Engineering
@@ -10,6 +8,7 @@ University of Málaga. System Engineering & Automation
 
 2015 -2016
 
+https://zenodo.org/badge/19999/angelmtenor/reinforcement-learning-NXT.svg
 
 
 Tools
