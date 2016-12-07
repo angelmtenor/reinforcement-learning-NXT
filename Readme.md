@@ -15,6 +15,6 @@ Tools
 -----
 - ROBOT: Lego Mindstorms NXT Education Set (kit 9797)    
 - NXC COMPILER: nbc >= 1.2.1 r4  
-    Ubuntu: sudo apt-get install nbc)
+    Ubuntu: sudo apt-get install nbc
     Windows : nbc >= 1.2.1 r4 (included in Bricx Command Center >= 3.3.8.9) 
 
