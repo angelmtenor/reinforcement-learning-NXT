@@ -6,9 +6,8 @@ University of Málaga. System Engineering & Automation
 2015-2016
 
 https://www.researchgate.net/publication/266265716_Lego_Mindstorms_NXT_and_Q-learning_a_teaching_approach_for_robotics_and_engineering
-http://babel.isa.uma.es/angelmt/Reinforcement_Learning/
-https://zenodo.org/badge/19999/angelmtenor/reinforcement-learning-NXT.svg
 
+http://babel.isa.uma.es/angelmt/Reinforcement_Learning/
 
 Tools
 -----
@@ -17,3 +16,4 @@ Tools
     Ubuntu: sudo apt-get install nbc
     Windows : nbc >= 1.2.1 r4 (included in Bricx Command Center >= 3.3.8.9) 
 
+https://zenodo.org/badge/19999/angelmtenor/reinforcement-learning-NXT.svg
