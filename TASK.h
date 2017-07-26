@@ -38,9 +38,9 @@
 #define N_STEPS         1000    // Exp_Time > STEP_TIME * N_STEPS
 #define INITIAL_POLICY  1       // 1: stop
 
-#define MOTOR_POWER            50   // motor power (from 0 to 100)  	    TUNE
-#define    THRESHOLD_DEGREES   25   // used in reward function			    TUNE
-#define    THRESHOLD_DISTANCE  25   // used in state encoding			    TUNE
+#define MOTOR_POWER            50   // motor power (from 0 to 100)  TUNE
+#define    THRESHOLD_DEGREES   25   // used in reward function      TUNE
+#define    THRESHOLD_DISTANCE  25   // used in state encoding       TUNE
 
 
 /* Functions prototypes ------------------------------------------------------*/
