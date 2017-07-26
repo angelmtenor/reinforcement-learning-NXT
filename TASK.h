@@ -161,13 +161,11 @@ float obtainReward(byte s, byte a, byte sp) {
      * result in a better function  R(s,a,s')
      */
 
-    // When gamma=0.9							(Be careful with overflow)
-
     float R;  // Reward
     long threshold_degrees;
 
     threshold_degrees = THRESHOLD_DEGREES;
-    //  Ref: 1 second at POWER 100 gives above 700 degrees with battery full
+    //  Ref: 1 second at POWER 100 gives above 700 degrees with full battery 
 
     R = 0;
 
