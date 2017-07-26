@@ -14,16 +14,16 @@
 
 /* Constants definition ------------------------------------------------------*/
 
-#define ALGORITHM_NAME        "SARSA"
+#define ALGORITHM_NAME "SARSA"
 
 /* Global variables ----------------------------------------------------------*/
 
 // Main arrays will be defined here to avoid exceeding NXC limitations
-byte Policy[N_STATES + 1];                    // Current Policy
-float V[N_STATES + 1];                        // Value function
-float Q[N_STATES + 1][N_ACTIONS + 1];                // Q-matrix
-int exploration[N_STATES + 1][N_ACTIONS + 1];    // Exploration matrix
-long step;                                // Current step
+byte Policy[N_STATES + 1];                      // Current Policy
+float V[N_STATES + 1];                          // Value function
+float Q[N_STATES + 1][N_ACTIONS + 1];           // Q-matrix
+int exploration[N_STATES + 1][N_ACTIONS + 1];   // Exploration matrix
+long step;                                      // Current step
 
 int frequentist_data[N_STATES + 1][N_ACTIONS + 1][N_STATES + 1];
 /* Holds the number of steps in which from s, executing a, resulted sp.
@@ -39,14 +39,11 @@ byte mode;  // 0: Normal learning, 1: Debug learning, 2: Exploit Policy, 3: Lear
 /* Note: Older Bricx Command Center versions will throw error here.
  *      In that case, erasing this section will solve the problem.
  *      NBC 1.2.1.r4 compiler under Linux works OK in any case.
-  */
+*/
 
 long getMemoryNeeded(byte nstates, byte nactions, long nsteps);
-
 void NXTsaveData(long memoryNeeded);
-
 byte selectAction(byte s, byte strategy);
-
 void exploitPolicy(byte s);
 
 
@@ -60,11 +57,11 @@ long getMemoryNeeded(byte nstates, byte nactions, long nsteps) {
 
     long memoryNeeded;
 
-    memoryNeeded = 100;                                // String comments: %...
-    memoryNeeded += (nstates + 1) * (5 + 1) + 2;                // Policy row
-    memoryNeeded += (nstates + 1) * (10 + 1) + 2;                // Value function row
-    memoryNeeded += ((nstates + 1) * (10 + 1) + 2) * (nactions + 1);// Q matrix rows
-    memoryNeeded += ((nstates + 1) * (5 + 1) + 2) * (nactions + 1); // Q exploration rows
+    memoryNeeded = 100;                                                 // String comments: %...
+    memoryNeeded += (nstates + 1) * (5 + 1) + 2;                        // Policy row
+    memoryNeeded += (nstates + 1) * (10 + 1) + 2;                       // Value function row
+    memoryNeeded += ((nstates + 1) * (10 + 1) + 2) * (nactions + 1);    // Q matrix rows
+    memoryNeeded += ((nstates + 1) * (5 + 1) + 2) * (nactions + 1);     // Q exploration rows
     memoryNeeded += ((nstates + 1) * (5 + 1) + 2) * (nactions + 1) * (nstates + 1);
     // sample model data matrix
 
@@ -394,8 +391,8 @@ task main() {
         ap = selectAction(sp, strategy);
 
         // Update Q-matrix
-        Q[s][a] = (1 - alpha) * Q[s][a] + alpha * (R + GAMMA * Q[sp][ap]);               // SARSA        update
-        // Q[s][a]=(1-alpha)*Q[s][a]  +  alpha*(R+ GAMMA*V[sp]);                // Q-learning   update
+        Q[s][a] = (1 - alpha) * Q[s][a] + alpha * (R + GAMMA * Q[sp][ap]); // SARSA update
+        // Q[s][a]=(1-alpha)*Q[s][a]  +  alpha*(R+ GAMMA*V[sp]);           // Q-learning update
 
         // Update V and Policy 													
         V[s] = Q[s][1];
@@ -445,7 +442,7 @@ task main() {
         switch (mode) {
 
             case 0:     // normal learning
-                mode = button_pressed;  // left:        debug(1)
+                mode = button_pressed;  // left: debug(1)
                 // enter:       exploit(2)
                 // right:       finish(3)
                 // no_button:   normal(0)

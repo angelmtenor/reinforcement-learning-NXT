@@ -22,7 +22,7 @@
 /* Constants definition ------------------------------------------------------*/
 
 // FileSystem parameters
-#define NAME            "Simple_1"   //  LIMIT: 15 CHARACTERS  !!!
+#define NAME            "Simple_1"   //  LIMIT: 15 CHARACTERS
 // resulting filename will be  NAME+".log"
 #define ENVIRONMENT     "square_70x100 (with obstacle 29x9)"
 
@@ -30,17 +30,17 @@
 #define N_STATES        4            // from 1 to N_STATES
 #define N_ACTIONS       4            // from 1 to N_ACTIONS
 
-#define GAMMA            0.9                                //	NXT OPTIMAL
-#define INITIAL_ALPHA   0.02                                //	NXT OPTIMAL
+#define GAMMA            0.9  // NXT OPTIMAL
+#define INITIAL_ALPHA   0.02  // NXT OPTIMAL
 
 // Experiment parameters
-#define STEP_TIME    250                // (ms)
-#define N_STEPS        1000            // Exp_Time > STEP_TIME * N_STEPS
-#define INITIAL_POLICY  1                // 1: stop
+#define STEP_TIME       250     // (ms)
+#define N_STEPS         1000    // Exp_Time > STEP_TIME * N_STEPS
+#define INITIAL_POLICY  1       // 1: stop
 
-#define MOTOR_POWER            50            // Motor power (from 0 to 100)  	TUNE
-#define    THRESHOLD_DEGREES    25                // Used in reward function			TUNE
-#define    THRESHOLD_DISTANCE    25                // Used in state encoding			TUNE
+#define MOTOR_POWER            50   // motor power (from 0 to 100)  	    TUNE
+#define    THRESHOLD_DEGREES   25   // used in reward function			    TUNE
+#define    THRESHOLD_DISTANCE  25   // used in state encoding			    TUNE
 
 
 /* Functions prototypes ------------------------------------------------------*/
@@ -50,11 +50,8 @@
   */
 
 byte selectActionStrategy(void);
-
 void executeAction(byte a);
-
 byte observeState(void);
-
 float obtainReward(byte s, byte a, byte sp);
 
 
@@ -166,7 +163,7 @@ float obtainReward(byte s, byte a, byte sp) {
 
     // When gamma=0.9							(Be careful with overflow)
 
-    float R;        // Reward
+    float R;  // Reward
     long threshold_degrees;
 
     threshold_degrees = THRESHOLD_DEGREES;

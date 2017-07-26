@@ -28,15 +28,15 @@
  */
 
 // Actuators
-#define LEFT_WHEEL        OUT_C
-#define RIGHT_WHEEL        OUT_B
+#define LEFT_WHEEL      OUT_C
+#define RIGHT_WHEEL     OUT_B
 
-// Sensors ( check also NXT_mapSensors() )
-#define ULTRASONIC        S4
+// Sensors ( check NXT_mapSensors() )
+#define ULTRASONIC      S4
 #define LEFT_BUMPER     SENSOR_3
 #define RIGHT_BUMPER    SENSOR_2
 
-#define DEFAULT_MOTOR_POWER    80 // Pointless when MOTOR_POWER(TASK.h) is used
+#define DEFAULT_MOTOR_POWER    80
 
 
 /* Global variables ----------------------------------------------------------*/
@@ -49,47 +49,27 @@ mutex msgmutex;        // Mutex needed for NXT display
  *      NBC 1.2.1.r4 compiler under Linux works OK in any case.
   */
 void NXT_mapSensors(void);
-
 byte getObservationUltrasonic(void);
-
 void executeNXT(string command, byte power = DEFAULT_MOTOR_POWER);
-
 void display(const string &m);
-
 void displayForceRow(const string &m, byte row);
-
 bool NXTcheckMemory(long memoryNeeded);
-
 void pauseNXT(void);
-
 bool debugButton(void);
-
 bool exploitPolicyButton(void);
-
 bool saveAndExitButton(void);
-
 byte getButtonPressed(void);
-
 void playStartSound(void);
-
 void playEndingSound(void);
-
 void playErrorSound(void);
-
 void playExploitationSound(void);
-
 void playStepSound(void);
-
 void playStepOptimalSound(void);
-
 void playPauseSound(void);
-
 void playDebugSound(void);
 
 
 /* Functions definitions------------------------------------------------------*/
-
-
 void NXT_mapSensors() {
 /* 	Assigns NXT sensors	*/
     SetSensorUltrasonic(ULTRASONIC);
